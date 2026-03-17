@@ -1,0 +1,310 @@
+/* ============================================================
+   Zip Game Clone – Styles
+   Dark glassmorphism theme · Inter font · Drag-to-draw
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+
+/* ---------- CSS Custom Properties ---------- */
+:root {
+  --bg-gradient-start: #0f0c29;
+  --bg-gradient-mid: #302b63;
+  --bg-gradient-end: #24243e;
+
+  --glass-bg: rgba(255, 255, 255, 0.06);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-shadow: rgba(0, 0, 0, 0.4);
+
+  --cell-bg: rgba(255, 255, 255, 0.08);
+  --cell-hover: rgba(255, 255, 255, 0.14);
+  --cell-fixed-bg: rgba(255, 255, 255, 0.18);
+  --cell-fixed-border: rgba(255, 255, 255, 0.30);
+
+  --path-color: #7c5cfc;
+  --path-glow: rgba(124, 92, 252, 0.45);
+  --node-color: #a78bfa;
+  --node-stroke: #7c5cfc;
+  --line-color: rgba(124, 92, 252, 0.55);
+
+  --text-primary: #f0eef6;
+  --text-secondary: rgba(240, 238, 246, 0.50);
+  --text-number: #f0eef6;
+
+  --cell-size: 72px;
+  --cell-gap: 6px;
+  --radius: 16px;
+  --transition-fast: 0.15s ease;
+  --transition-med: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ---------- Reset & Base ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-mid), var(--bg-gradient-end));
+  color: var(--text-primary);
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------- Game Container (Glass Panel) ---------- */
+.game-container {
+  width: 480px;
+  max-width: 95vw;
+  padding: 32px 28px 28px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 8px 32px var(--glass-shadow);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+/* ---------- Header ---------- */
+.header {
+  text-align: center;
+}
+
+.header h1 {
+  font-weight: 900;
+  font-size: 2rem;
+  letter-spacing: -0.03em;
+  background: linear-gradient(135deg, #7c5cfc, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.header .subtitle {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+/* ---------- Level Selector ---------- */
+.level-selector {
+  display: flex;
+  gap: 8px;
+}
+
+.level-btn {
+  padding: 8px 18px;
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.level-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
+}
+
+.level-btn.active {
+  background: var(--path-color);
+  border-color: var(--path-color);
+  color: #fff;
+  box-shadow: 0 0 14px var(--path-glow);
+}
+
+/* ---------- Grid Wrapper ---------- */
+.grid-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+/* ---------- Grid ---------- */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(5, var(--cell-size));
+  grid-template-rows: repeat(5, var(--cell-size));
+  gap: var(--cell-gap);
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------- Cell ---------- */
+.cell {
+  width: var(--cell-size);
+  height: var(--cell-size);
+  background: var(--cell-bg);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: transparent;
+  cursor: pointer;
+  position: relative;
+  transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+  z-index: 1;
+}
+
+.cell:hover {
+  background: var(--cell-hover);
+}
+
+/* Fixed numbered cells – neutral, consistent look */
+.cell.fixed {
+  background: var(--cell-fixed-bg);
+  border: 1.5px solid var(--cell-fixed-border);
+  color: var(--text-number);
+  font-weight: 900;
+  font-size: 1.15rem;
+}
+
+/* Don't change fixed cell background when on path */
+.cell.fixed.on-path {
+  background: var(--cell-fixed-bg);
+}
+
+/* ---------- SVG Path Overlay ---------- */
+.path-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.path-svg line {
+  stroke: var(--line-color);
+  stroke-width: 8;
+  stroke-linecap: round;
+}
+
+.path-svg circle {
+  fill: var(--node-color);
+  stroke: var(--node-stroke);
+  stroke-width: 2;
+  transition: r var(--transition-fast);
+}
+
+.path-svg circle.head-node {
+  fill: #fff;
+  stroke: var(--path-color);
+  stroke-width: 3;
+  filter: drop-shadow(0 0 8px var(--path-glow));
+}
+
+/* ---------- Status Bar ---------- */
+.status-bar {
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  min-height: 24px;
+  transition: color var(--transition-med);
+}
+
+.status-bar.win {
+  color: #4cd964;
+  font-weight: 700;
+  font-size: 1.05rem;
+  animation: celebrate 0.6s ease;
+}
+
+@keyframes celebrate {
+  0% {
+    transform: scale(1);
+  }
+
+  30% {
+    transform: scale(1.15);
+  }
+
+  60% {
+    transform: scale(0.95);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ---------- Controls ---------- */
+.controls {
+  display: flex;
+  gap: 10px;
+}
+
+.ctrl-btn {
+  padding: 10px 22px;
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+
+.ctrl-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
+}
+
+.ctrl-btn:active {
+  transform: translateY(0);
+}
+
+/* ---------- Confetti Canvas ---------- */
+#confetti-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 999;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 520px) {
+  :root {
+    --cell-size: 56px;
+    --cell-gap: 5px;
+  }
+
+  .game-container {
+    padding: 20px 16px 16px;
+  }
+
+  .header h1 {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 370px) {
+  :root {
+    --cell-size: 48px;
+    --cell-gap: 4px;
+  }
+}

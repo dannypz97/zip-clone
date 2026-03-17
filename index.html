@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zip – Path Puzzle Game</title>
+  <meta name="description"
+    content="Connect numbered circles on a grid to form a single path in this addictive puzzle game." />
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+  <canvas id="confetti-canvas"></canvas>
+
+  <div class="game-container">
+    <!-- Header -->
+    <div class="header">
+      <h1>ZIP</h1>
+      <p class="subtitle">Drag to connect the path from start to finish</p>
+    </div>
+
+    <!-- Level Selector -->
+    <div class="level-selector">
+      <button class="level-btn active" data-level="1" onclick="loadLevel(1)">Level 1</button>
+      <button class="level-btn" data-level="2" onclick="loadLevel(2)">Level 2</button>
+      <button class="level-btn" data-level="3" onclick="loadLevel(3)">Level 3</button>
+    </div>
+
+    <!-- Grid -->
+    <div class="grid-wrapper">
+      <div class="grid" id="grid"></div>
+      <svg class="path-svg" id="path-svg"></svg>
+    </div>
+
+    <!-- Status -->
+    <p class="status-bar" id="status">Drag from the start number to begin</p>
+
+    <!-- Move Counter -->
+    <p class="status-bar" style="font-size: 0.8rem;">Moves: <span id="move-count">0</span> / <span
+        id="move-total">0</span></p>
+
+    <!-- Controls -->
+    <div class="controls">
+      <button class="ctrl-btn" onclick="undoMove()">⟲ Undo</button>
+      <button class="ctrl-btn" onclick="resetPath()">↺ Reset</button>
+    </div>
+  </div>
+
+  <script src="levels.js"></script>
+  <script src="game.js"></script>
+</body>
+
+</html>
