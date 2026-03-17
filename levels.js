@@ -5,13 +5,16 @@
  *   id        – level number
  *   name      – display name
  *   gridSize  – always 5 for now
- *   numbers   – "row,col" → sequential number (fixed waypoints, incrementally numbered)
- *   solution  – full path as [row,col] pairs
+ *   numbers   – "row,col" → sequential waypoint label (1, 2, 3, …)
+ *               The path must visit ALL 25 cells and pass through waypoints in order.
+ *   solution  – one valid Hamiltonian path (for future hints)
  *
  * Constraints:
- *   - No two fixed numbers are adjacent (including diagonals; Chebyshev distance ≥ 2)
- *   - Path length is less than 25 for simplicity
- *   - Fixed numbers are sequential: 1, 2, 3, …
+ *   - All 25 cells must be covered
+ *   - No two fixed waypoints are adjacent (including diagonals; Chebyshev ≥ 2)
+ *   - Waypoints are labeled sequentially: 1, 2, 3, …
+ *   - 1 is the start, highest number is the end
+ *   - Between waypoints the player is free to choose any route
  */
 
 const LEVELS = [
@@ -19,54 +22,56 @@ const LEVELS = [
         id: 1,
         name: "First Steps",
         gridSize: 5,
-        // Path length: 12
         numbers: {
-            "0,0": 1,
-            "2,1": 4,
-            "0,2": 7,
-            "2,3": 12,
+            "0,0": 1,   // start
+            "2,2": 2,
+            "4,0": 3,
+            "4,4": 4,   // end
         },
         solution: [
-            [0, 0], [1, 0], [2, 0], [2, 1], [2, 2],
-            [1, 2], [0, 2], [0, 3], [0, 4], [1, 4],
-            [2, 4], [2, 3],
+            [0, 0], [0, 1], [0, 2], [0, 3], [0, 4],
+            [1, 4], [1, 3], [1, 2], [1, 1], [1, 0],
+            [2, 0], [2, 1], [2, 2], [2, 3], [2, 4],
+            [3, 4], [3, 3], [3, 2], [3, 1], [3, 0],
+            [4, 0], [4, 1], [4, 2], [4, 3], [4, 4],
         ],
     },
     {
         id: 2,
         name: "Winding Road",
         gridSize: 5,
-        // Path length: 15
         numbers: {
-            "0,0": 1,
-            "0,4": 5,
-            "1,2": 8,
-            "2,0": 11,
-            "4,2": 15,
+            "0,0": 1,   // start
+            "4,0": 2,
+            "0,2": 3,
+            "4,2": 4,
+            "0,4": 5,   // end
         },
         solution: [
-            [0, 0], [0, 1], [0, 2], [0, 3], [0, 4],
-            [1, 4], [1, 3], [1, 2], [1, 1], [1, 0],
-            [2, 0], [3, 0], [4, 0], [4, 1], [4, 2],
+            [0, 0], [1, 0], [2, 0], [3, 0], [4, 0],
+            [4, 1], [3, 1], [2, 1], [1, 1], [0, 1],
+            [0, 2], [1, 2], [2, 2], [3, 2], [4, 2],
+            [4, 3], [3, 3], [2, 3], [1, 3], [0, 3],
+            [0, 4], [1, 4], [2, 4], [3, 4], [4, 4],
         ],
     },
     {
         id: 3,
-        name: "Serpentine",
+        name: "Spiral",
         gridSize: 5,
-        // Path length: 18
         numbers: {
-            "4,4": 1,
-            "2,4": 3,
-            "1,2": 9,
-            "0,0": 13,
-            "4,1": 18,
+            "0,0": 1,   // start
+            "2,4": 2,
+            "4,2": 3,
+            "2,0": 4,
+            "2,2": 5,   // end
         },
         solution: [
-            [4, 4], [3, 4], [2, 4], [2, 3], [3, 3],
-            [4, 3], [4, 2], [3, 2], [2, 2], [1, 2],
-            [0, 2], [0, 1], [0, 0], [1, 0], [2, 0],
-            [2, 1], [3, 1], [4, 1],
+            [0, 0], [0, 1], [0, 2], [0, 3], [0, 4],
+            [1, 4], [2, 4], [3, 4], [4, 4], [4, 3],
+            [4, 2], [4, 1], [4, 0], [3, 0], [2, 0],
+            [1, 0], [1, 1], [1, 2], [1, 3], [2, 3],
+            [3, 3], [3, 2], [3, 1], [2, 1], [2, 2],
         ],
     },
 ];

@@ -1,6 +1,7 @@
 /**
  * Zip Game Clone – Core Game Logic
- * Drag-to-draw interaction · Circle nodes on thick lines
+ * Drag-to-draw · Free-form routing between sequential waypoints
+ * Circle nodes on thick lines · All 25 cells must be covered
  */
 
 (function () {
@@ -8,11 +9,13 @@
 
     /* ── State ────────────────────────────────────────── */
     let currentLevel = null;
-    let path = [];           // array of "row,col" strings
-    let fixedNumbers = {};   // "row,col" → number
+    let path = [];           // "row,col" strings in visit order
+    let fixedNumbers = {};   // "row,col" → sequential label (1, 2, 3 …)
     let startKey = "";
     let endKey = "";
-    let totalCells = 0;      // path length for current level
+    let totalCells = 25;
+    let maxWaypoint = 0;     // highest numbered waypoint
+    let nextWaypoint = 2;    // next waypoint the path must reach (1 is start)
     let isWon = false;
     let isDragging = false;
 
@@ -34,11 +37,6 @@
         return Math.abs(r1 - r2) + Math.abs(c1 - c2) === 1;
     }
 
-    function cellElement(k) {
-        const [r, c] = parseKey(k);
-        return gridEl.querySelector(`.cell[data-row="${r}"][data-col="${c}"]`);
-    }
-
     /* ── Grid Rendering ───────────────────────────────── */
     function renderGrid() {
         gridEl.innerHTML = "";
@@ -58,7 +56,7 @@
                     cell.textContent = fixedNumbers[k];
                 }
 
-                // --- Drag events (pointer) ---
+                // Pointer events for drag-to-draw
                 cell.addEventListener("pointerdown", (e) => onPointerDown(e, k));
                 cell.addEventListener("pointerenter", () => onPointerEnter(k));
                 cell.addEventListener("pointerup", () => onPointerUp());
@@ -67,7 +65,6 @@
             }
         }
 
-        // Capture pointerup even outside cells
         document.addEventListener("pointerup", onPointerUp);
     }
 
@@ -76,7 +73,7 @@
         if (isWon) return;
         e.preventDefault();
 
-        // If path is empty, only start cell can begin
+        // Start fresh from start cell
         if (path.length === 0) {
             if (k !== startKey) return;
             path.push(k);
@@ -93,10 +90,10 @@
             return;
         }
 
-        // Clicking a cell on the path → trim path back to that cell
+        // Clicking a cell already on the path → trim back to that cell
         const idx = path.indexOf(k);
         if (idx !== -1) {
-            path = path.slice(0, idx + 1);
+            trimPathTo(idx);
             isDragging = true;
             updateUI();
             return;
@@ -104,7 +101,7 @@
 
         // Clicking adjacent valid cell → extend and start dragging
         if (areAdjacent(head, k) && !path.includes(k) && isValidMove(k)) {
-            path.push(k);
+            addToPath(k);
             isDragging = true;
             updateUI();
             checkWin();
@@ -118,16 +115,16 @@
 
         const head = path[path.length - 1];
 
-        // Backtrack: if entering the cell before head, undo head
+        // Backtrack: entering the cell before head undoes the head
         if (path.length >= 2 && k === path[path.length - 2]) {
-            path.pop();
+            removeFromPath();
             updateUI();
             return;
         }
 
         // Extend path
         if (areAdjacent(head, k) && !path.includes(k) && isValidMove(k)) {
-            path.push(k);
+            addToPath(k);
             updateUI();
             checkWin();
         }
@@ -137,35 +134,46 @@
         isDragging = false;
     }
 
+    /* ── Path Mutation (tracks nextWaypoint) ──────────── */
+    function addToPath(k) {
+        path.push(k);
+        if (fixedNumbers[k] !== undefined && fixedNumbers[k] === nextWaypoint) {
+            nextWaypoint++;
+        }
+    }
+
+    function removeFromPath() {
+        const removed = path.pop();
+        if (fixedNumbers[removed] !== undefined && fixedNumbers[removed] === nextWaypoint - 1) {
+            nextWaypoint--;
+        }
+    }
+
+    function trimPathTo(idx) {
+        // Remove cells from the end back to idx (exclusive)
+        while (path.length > idx + 1) {
+            removeFromPath();
+        }
+    }
+
     /* ── Move Validation ──────────────────────────────── */
     function isValidMove(k) {
-        const nextIndex = path.length; // 0-indexed position for the new cell
-
-        // If the target cell has a fixed number, it must match nextIndex + 1
+        // If the target cell is a fixed waypoint…
         if (fixedNumbers[k] !== undefined) {
-            if (fixedNumbers[k] !== nextIndex + 1) return false;
+            // You can ONLY step on the NEXT required waypoint
+            if (fixedNumbers[k] !== nextWaypoint) return false;
         }
-
-        // Check: is there a fixed number that must appear at position nextIndex+1?
-        const requiredNumber = nextIndex + 1;
-        const requiredKey = Object.keys(fixedNumbers).find(
-            (fk) => fixedNumbers[fk] === requiredNumber
-        );
-        if (requiredKey && requiredKey !== k) return false;
-
         return true;
     }
 
     /* ── Update UI ────────────────────────────────────── */
     function updateUI() {
-        // Update cell classes
         const cells = gridEl.querySelectorAll(".cell");
         cells.forEach((cell) => {
             const r = +cell.dataset.row;
             const c = +cell.dataset.col;
             const k = key(r, c);
             cell.classList.remove("on-path");
-
             if (path.includes(k)) {
                 cell.classList.add("on-path");
             }
@@ -214,10 +222,10 @@
             pathSvg.appendChild(line);
         }
 
-        // Draw circle nodes (skip fixed cells — their number label is sufficient)
+        // Draw circle nodes — skip fixed cells (they already show their number)
         for (let i = 0; i < coords.length; i++) {
             const k = path[i];
-            if (fixedNumbers[k] !== undefined) continue; // fixed cell keeps its number
+            if (fixedNumbers[k] !== undefined) continue;
 
             const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
             circle.setAttribute("cx", coords[i].x);
@@ -227,7 +235,7 @@
             pathSvg.appendChild(circle);
         }
 
-        // If head is a fixed cell, add a subtle ring around it
+        // If head is a fixed cell, draw a subtle ring
         const lastK = path[path.length - 1];
         if (fixedNumbers[lastK] !== undefined) {
             const lastCoord = coords[coords.length - 1];
@@ -247,6 +255,8 @@
     function checkWin() {
         if (path.length !== totalCells) return;
         if (path[path.length - 1] !== endKey) return;
+        // Verify all waypoints were visited
+        if (nextWaypoint !== maxWaypoint + 1) return;
 
         isWon = true;
         statusEl.textContent = "🎉 Level Complete!";
@@ -257,13 +267,14 @@
     /* ── Controls ─────────────────────────────────────── */
     window.undoMove = function () {
         if (isWon || path.length <= 1) return;
-        path.pop();
+        removeFromPath();
         updateUI();
     };
 
     window.resetPath = function () {
-        if (isWon) isWon = false;
+        isWon = false;
         path = [startKey];
+        nextWaypoint = 2;
         updateUI();
     };
 
@@ -273,16 +284,17 @@
         if (!level) return;
         currentLevel = level;
         fixedNumbers = { ...level.numbers };
-        totalCells = level.solution.length;
+        totalCells = level.gridSize * level.gridSize;
         isWon = false;
         isDragging = false;
         path = [];
+        nextWaypoint = 2;
 
-        // Find start (min number) and end (max number)
-        let minNum = Infinity, maxNum = -Infinity;
+        // Find start (label 1) and end (highest label)
+        maxWaypoint = 0;
         for (const [k, num] of Object.entries(fixedNumbers)) {
-            if (num < minNum) { minNum = num; startKey = k; }
-            if (num > maxNum) { maxNum = num; endKey = k; }
+            if (num === 1) startKey = k;
+            if (num > maxWaypoint) { maxWaypoint = num; endKey = k; }
         }
 
         // Update level buttons
@@ -290,7 +302,6 @@
             btn.classList.toggle("active", +btn.dataset.level === id);
         });
 
-        // Update total display
         moveTotalEl.textContent = totalCells;
 
         renderGrid();
